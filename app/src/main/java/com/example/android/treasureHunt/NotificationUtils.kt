@@ -21,6 +21,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
@@ -72,7 +73,7 @@ fun NotificationManager.sendGeofenceEnteredNotification(context: Context, foundI
     )
     val bigPicStyle = NotificationCompat.BigPictureStyle()
         .bigPicture(mapImage)
-        .bigLargeIcon(null)
+        .bigLargeIcon(null as Bitmap?)
 
     // We use the name resource ID from the LANDMARK_DATA along with content_text to create
     // a custom message when a Geofence triggers.
