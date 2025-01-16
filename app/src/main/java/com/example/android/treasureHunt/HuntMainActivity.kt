@@ -45,6 +45,11 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.material.snackbar.Snackbar
 
+
+//private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+//private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
+//private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
+
 /**
  * The Treasure Hunt app is a single-player game based on geofences.
  *
@@ -126,10 +131,6 @@ class HuntMainActivity : AppCompatActivity() {
         }
     }
 
-    /*
-	 * In all cases, we need to have the location permission.  On Android 10+ (Q) we need to have
-	 * the background permission as well.
-	 */
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -138,51 +139,38 @@ class HuntMainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.d(TAG, "onRequestPermissionResult")
 
-        if (grantResults.isNotEmpty()) {
-            val locationPermissionDenied = grantResults[LOCATION_PERMISSION_INDEX] ==
-                    PackageManager.PERMISSION_DENIED
-            val requestCodeCorrect =
-                requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            val backgroundLocationPermissionDenied =
-                grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                        PackageManager.PERMISSION_DENIED
-            if (grantResults.isEmpty() || locationPermissionDenied ||
-                (requestCodeCorrect && backgroundLocationPermissionDenied)
-            ) {
-                // Permission denied.
-                showSnackbar(
-                    binding.activityMapsMain,
-                    R.string.permission_denied_explanation,
-                    R.string.settings,
-                    ::openSettings
-                )
-                /*
-				Snackbar.make(
-					binding.activityMapsMain,
-					R.string.permission_denied_explanation, Snackbar.LENGTH_INDEFINITE
-				)
-					.setAction(R.string.settings) {
-						// Displays App settings screen.
-						startActivity(Intent().apply {
-							action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-							val uri: Uri = Uri.fromParts("package", packageName, null)
-							data = uri
-							flags = Intent.FLAG_ACTIVITY_NEW_TASK
-						})
-					}.show()
-				 */
-            } else {
-                checkDeviceLocationSettingsAndStartGeofence()
-            }
+        if (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE) {
+            handlePermissionResult(permissions, grantResults)
         } else {
-            // Permission denied.
-            showSnackbar(
-                binding.activityMapsMain,
-                R.string.permission_denied_explanation,
-                R.string.settings,
-                ::openSettings
-            )
+            Log.w(TAG, "Unexpected requestCode: $requestCode")
         }
+    }
+
+    private fun handlePermissionResult(permissions: Array<String>, grantResults: IntArray) {
+        val locationGranted = checkPermissionGranted(permissions, grantResults, Manifest.permission.ACCESS_FINE_LOCATION)
+        val backgroundLocationGranted = checkPermissionGranted(permissions, grantResults, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+        if (locationGranted && backgroundLocationGranted) {
+            checkDeviceLocationSettingsAndStartGeofence()
+        } else {
+            showPermissionDeniedSnackbar()
+        }
+    }
+
+    private fun checkPermissionGranted(permissions: Array<String>, grantResults: IntArray, permission: String): Boolean {
+        val permissionIndex = permissions.indexOf(permission)
+        return permissionIndex != -1 &&
+                permissionIndex < grantResults.size &&
+                grantResults[permissionIndex] == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun showPermissionDeniedSnackbar() {
+        showSnackbar(
+            binding.activityMapsMain,
+            R.string.permission_denied_explanation,
+            R.string.settings,
+            ::openSettings
+        )
     }
 
     /**
@@ -243,6 +231,7 @@ class HuntMainActivity : AppCompatActivity() {
                     android.R.string.ok,
                     ::checkDeviceLocationSettingsAndStartGeofence
                 )
+
                 /*
 				Snackbar.make(
 					binding.activityMapsMain,
@@ -437,10 +426,15 @@ class HuntMainActivity : AppCompatActivity() {
         })
     }
 
-    private fun showSnackbar(layoutId: ConstraintLayout, messageId: Int, actionId: Int, func: () -> Unit) {
-        Snackbar.make(layoutId, messageId, Snackbar.LENGTH_INDEFINITE).setAction(actionId) {
-            func()
-        }.show()
+    private fun showSnackbar(
+        view: android.view.View,
+        messageResId: Int,
+        actionResId: Int,
+        action: () -> Unit
+    ) {
+        Snackbar.make(view, messageResId, Snackbar.LENGTH_INDEFINITE)
+            .setAction(actionResId) { action() }
+            .show()
     }
 
     private fun showToast(message: Int) {
