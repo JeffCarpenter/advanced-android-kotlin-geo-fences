@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.android.treasureHunt"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.android.treasureHunt"
