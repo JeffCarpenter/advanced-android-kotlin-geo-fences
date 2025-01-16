@@ -35,7 +35,6 @@ import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import com.example.android.treasureHunt.databinding.ActivityHuntMainBinding
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.Geofence
