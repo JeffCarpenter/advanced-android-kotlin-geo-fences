@@ -29,4 +29,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "GeoFences"
-include ':app'
+include(":app")
