@@ -30,4 +30,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "GeoFences"
 include ':app'
-
